@@ -1,2 +1,0 @@
-# O backend utiliza apenas bibliotecas da biblioteca padrão do Python.
-# Este arquivo permanece para controlar futuras dependências instaláveis via pip.
