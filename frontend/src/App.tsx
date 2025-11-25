@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import styled, { ThemeProvider } from 'styled-components';
-import GlobalStyle, { theme } from './styles/theme';
+import React, { useMemo, useState } from 'react';
+import styled from 'styled-components';
+import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import ItemRegistrationPage from './pages/ItemRegistrationPage';
 import SupplierRegistrationPage from './pages/SupplierRegistrationPage';
@@ -29,6 +29,7 @@ const Content = styled.main`
 `;
 
 const views = {
+  home: 'Início',
   login: 'Login',
   items: 'Itens',
   suppliers: 'Fornecedores'
@@ -36,8 +37,10 @@ const views = {
 
 export type View = keyof typeof views;
 
-const renderView = (view: View, onLoginSuccess: () => void) => {
+const renderView = (view: View, onLoginSuccess: () => void, onGoToLogin: () => void) => {
   switch (view) {
+    case 'home':
+      return <HomePage onStartLogin={onGoToLogin} onExplore={onGoToLogin} />;
     case 'login':
       return <LoginPage onSuccess={onLoginSuccess} />;
     case 'items':
@@ -50,31 +53,49 @@ const renderView = (view: View, onLoginSuccess: () => void) => {
 };
 
 export const App: React.FC = () => {
-  const [current, setCurrent] = useState<View>('login');
+  const [current, setCurrent] = useState<View>('home');
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
     setCurrent('items');
   };
 
+  const handleNavigate = (view: View) => {
+    if ((view === 'items' || view === 'suppliers') && !isAuthenticated) {
+      setCurrent('login');
+      return;
+    }
+    setCurrent(view);
+  };
+
+  const navItems = useMemo(
+    () =>
+      Object.entries(views).map(([key, label]) => ({
+        key: key as View,
+        label,
+        disabled: (key === 'items' || key === 'suppliers') && !isAuthenticated
+      })),
+    [isAuthenticated]
+  );
+
   return (
-    <ThemeProvider theme={theme}>
-      <GlobalStyle />
-      <Shell>
-        <Navbar>
-          {Object.entries(views).map(([key, label]) => (
-            <Button
-              key={key}
-              variant={current === key ? 'primary' : 'ghost'}
-              onClick={() => setCurrent(key as View)}
-              size="sm"
-            >
-              {label}
-            </Button>
-          ))}
-        </Navbar>
-        <Content>{renderView(current, handleLoginSuccess)}</Content>
-      </Shell>
-    </ThemeProvider>
+    <Shell>
+      <Navbar>
+        {navItems.map(({ key, label, disabled }) => (
+          <Button
+            key={key}
+            variant={current === key ? 'primary' : 'ghost'}
+            onClick={() => handleNavigate(key)}
+            size="sm"
+            disabled={disabled}
+          >
+            {label}
+          </Button>
+        ))}
+      </Navbar>
+      <Content>{renderView(current, handleLoginSuccess, () => setCurrent('login'))}</Content>
+    </Shell>
   );
 };
 
