@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import authRoutes from './routes/auth.js';
 import protectedRoutes from './routes/protected.js';
+import itemRoutes from './routes/items.js';
 
 export function createApp() {
   const app = express();
@@ -12,6 +13,7 @@ export function createApp() {
 
   app.use('/auth', authRoutes);
   app.use('/protected', protectedRoutes);
+  app.use('/api/items', itemRoutes);
 
   app.use((err, req, res, next) => {
     // eslint-disable-next-line no-console
