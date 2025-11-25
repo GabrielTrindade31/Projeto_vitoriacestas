@@ -2,9 +2,9 @@ import React from 'react';
 import styled from 'styled-components';
 
 type Column<T> = {
-  key: keyof T;
+  key: keyof T | string;
   header: string;
-  render?: (value: T[keyof T], row: T) => React.ReactNode;
+  render?: (value: T[keyof T] | undefined, row: T) => React.ReactNode;
 };
 
 type TableProps<T> = {
@@ -66,7 +66,10 @@ export const Table = <T extends Record<string, unknown>>({ columns, data, emptyM
             <tr key={rowIndex}>
               {columns.map((column) => (
                 <Td key={String(column.key)}>
-                  {column.render ? column.render(row[column.key], row) : String(row[column.key])}
+                  {(() => {
+                    const value = (row as Record<string, unknown>)[String(column.key)];
+                    return column.render ? column.render(value as T[keyof T], row) : String(value ?? '');
+                  })()}
                 </Td>
               ))}
             </tr>
