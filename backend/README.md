@@ -1,38 +1,44 @@
-# Backend
+# Backend Node.js (Express + JWT + Postgres)
 
-Serviço em Python para o módulo de estoque. O ambiente usa apenas a biblioteca padrão do Python, com armazenamento em SQLite. Ajustes principais ficam em `config.py`.
+API REST com autenticação por email/senha, geração de JWT com refresh token, rate limiting e controle de permissões por perfil (Admin, Gestor, Operador). Usa Postgres via `pg`.
 
-## Como executar
+## Requisitos
+- Node.js 18+
+- Banco Postgres acessível (use `DATABASE_URL` do `.env`)
 
-```bash
-python migrate.py
-python server.py
-```
+## Configuração
+1. Copie o `.env.example` para `.env` e ajuste as variáveis (incluindo as credenciais fornecidas de Postgres).
+2. Instale as dependências:
+   ```bash
+   cd backend
+   npm install
+   ```
+3. Execute o servidor:
+   ```bash
+   npm run dev  # hot reload
+   # ou
+   npm start
+   ```
 
-O endpoint `/health` responde com o status do serviço.
+Na subida o servidor cria automaticamente as tabelas `users` e `refresh_tokens` (se não existirem) e pode criar um usuário seed se `SEED_ADMIN_EMAIL` e `SEED_ADMIN_PASSWORD` estiverem definidos.
 
-## Cadastro de itens
+## Endpoints principais
+- `POST /auth/register` — cria usuário (Admin/Gestor/Operador) e retorna tokens.
+- `POST /auth/login` — login com email e senha; retorna access e refresh token.
+- `POST /auth/refresh` — rota de rotação do refresh token.
+- `POST /auth/logout` — revoga refresh token (requer access token).
+- `GET /auth/me` — retorna dados do usuário autenticado.
+- Rotas protegidas por role: `/protected/admin-only`, `/protected/gestor-ou-admin`, `/protected/operador`.
 
-`POST /items` cria um item de estoque com validações de obrigatoriedade, integridade de categoria e fornecedor e prevenção de nomes duplicados.
+## Segurança
+- Hash de senhas com `bcrypt`.
+- Access token com expiração (`JWT_EXPIRES_IN`, padrão 15m).
+- Refresh token com expiração (`REFRESH_EXPIRES_IN`, padrão 7d) e rotação armazenada em tabela.
+- Rate limiting aplicado às rotas de autenticação (10 requisições/minuto).
 
-Exemplo de corpo:
-
-```json
-{
-  "name": "Arroz",
-  "description": "Pacote 5kg",
-  "category_id": 1,
-  "supplier_id": 1,
-  "quantity": 10
-}
-```
-
-## Migrations
-
-Para criar ou atualizar o banco local, execute:
-
-```bash
-python migrate.py
-```
-
-As definições de tabela ficam em `migrations/001_create_tables.sql` com entidades para categorias, fornecedores e itens de estoque.
+## Estrutura de pastas
+- `src/server.js` — bootstrap, schema e seed.
+- `src/routes/` — rotas públicas e protegidas.
+- `src/middleware/` — autenticação, autorização e rate limit.
+- `src/security/` — helpers de senha e JWT.
+- `.env.example` — variáveis de ambiente.
