@@ -36,10 +36,10 @@ const views = {
 
 export type View = keyof typeof views;
 
-const renderView = (view: View) => {
+const renderView = (view: View, onLoginSuccess: () => void) => {
   switch (view) {
     case 'login':
-      return <LoginPage />;
+      return <LoginPage onSuccess={onLoginSuccess} />;
     case 'items':
       return <ItemRegistrationPage />;
     case 'suppliers':
@@ -51,6 +51,10 @@ const renderView = (view: View) => {
 
 export const App: React.FC = () => {
   const [current, setCurrent] = useState<View>('login');
+
+  const handleLoginSuccess = () => {
+    setCurrent('items');
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -68,7 +72,7 @@ export const App: React.FC = () => {
             </Button>
           ))}
         </Navbar>
-        <Content>{renderView(current)}</Content>
+        <Content>{renderView(current, handleLoginSuccess)}</Content>
       </Shell>
     </ThemeProvider>
   );
