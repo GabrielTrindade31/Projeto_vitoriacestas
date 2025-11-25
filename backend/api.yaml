@@ -1,0 +1,244 @@
+openapi: 3.0.3
+info:
+  title: Vitoria Cestas API
+  version: 1.0.0
+  description: |
+    API REST com autenticação via JWT, refresh token e controle de roles (Admin, Gestor, Operador).
+servers:
+  - url: http://localhost:3000
+    description: Ambiente local
+paths:
+  /auth/register:
+    post:
+      summary: Cria usuário e retorna tokens
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Usuário criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Dados ausentes ou role inválida
+        '409':
+          description: Usuário já existe
+  /auth/login:
+    post:
+      summary: Autentica usuário e retorna tokens
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login bem-sucedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Dados ausentes
+        '401':
+          description: Credenciais inválidas
+  /auth/refresh:
+    post:
+      summary: Rotaciona o refresh token e retorna novos tokens
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+              required: [refreshToken]
+      responses:
+        '200':
+          description: Tokens renovados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+        '400':
+          description: Refresh token ausente
+        '401':
+          description: Refresh token inválido ou expirado
+  /auth/logout:
+    post:
+      summary: Revoga o refresh token atual
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '204':
+          description: Logout concluído
+  /auth/me:
+    get:
+      summary: Retorna o usuário autenticado
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dados do usuário
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Token ausente ou inválido
+  /protected/admin-only:
+    get:
+      summary: Acesso exclusivo para Admin
+      tags: [Protected]
+      security:
+        - bearerAuth: []
+        - roleAdmin: []
+      responses:
+        '200':
+          description: Acesso permitido
+        '401':
+          description: Não autenticado
+        '403':
+          description: Sem permissão
+  /protected/gestor-ou-admin:
+    get:
+      summary: Acesso para Gestor ou Admin
+      tags: [Protected]
+      security:
+        - bearerAuth: []
+        - roleGestorAdmin: []
+      responses:
+        '200':
+          description: Acesso permitido
+        '401':
+          description: Não autenticado
+        '403':
+          description: Sem permissão
+  /protected/operador:
+    get:
+      summary: Acesso para Operador, Gestor ou Admin
+      tags: [Protected]
+      security:
+        - bearerAuth: []
+        - roleOperador: []
+      responses:
+        '200':
+          description: Acesso permitido
+        '401':
+          description: Não autenticado
+        '403':
+          description: Sem permissão
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    roleAdmin:
+      type: apiKey
+      name: X-Role
+      in: header
+      description: Somente admins são autorizados
+    roleGestorAdmin:
+      type: apiKey
+      name: X-Role
+      in: header
+      description: Admin ou Gestor são autorizados
+    roleOperador:
+      type: apiKey
+      name: X-Role
+      in: header
+      description: Admin, Gestor ou Operador são autorizados
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          format: email
+          example: admin@vitoriacestas.com
+        role:
+          type: string
+          enum: [ADMIN, GESTOR, OPERADOR]
+          example: ADMIN
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        role:
+          type: string
+          enum: [ADMIN, GESTOR, OPERADOR]
+      required: [email, password, role]
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      required: [email, password]
+    TokenPair:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          description: Expiração do access token em segundos
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+    RefreshResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
