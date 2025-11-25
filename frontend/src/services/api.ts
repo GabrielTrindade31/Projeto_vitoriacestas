@@ -68,4 +68,24 @@ export type LoginResponse = {
 export const login = (credentials: { email: string; password: string }) =>
   api.post<LoginResponse>('/auth/login', credentials, { skipAuth: true });
 
+export type ItemPayload = {
+  nome: string;
+  codigo: string;
+  custo: number;
+  preco: number;
+  estoque: number;
+};
+
+export type ItemResponse = ItemPayload & {
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export const fetchItems = () => api.get<ItemResponse[]>('/api/items');
+
+export const createItem = (payload: ItemPayload) => api.post<ItemResponse>('/api/items', payload);
+
+export const updateItem = (id: number, payload: ItemPayload) => api.put<ItemResponse>(`/api/items/${id}`, payload);
+
 export default api;
