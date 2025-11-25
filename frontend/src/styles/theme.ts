@@ -2,14 +2,14 @@ import { createGlobalStyle } from 'styled-components';
 
 export const theme = {
   colors: {
-    primary: '#1d4ed8',
-    primaryHover: '#1e40af',
-    secondary: '#f59e0b',
-    background: '#f8fafc',
+    primary: '#0ea466',
+    primaryHover: '#0b8a57',
+    secondary: '#bbf7d0',
+    background: '#f6fdf8',
     surface: '#ffffff',
     text: '#0f172a',
-    muted: '#64748b',
-    border: '#e2e8f0'
+    muted: '#4b5563',
+    border: '#d1e7d9'
   },
   spacing: (factor: number) => `${factor * 8}px`,
   radius: {
