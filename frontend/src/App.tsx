@@ -10,6 +10,9 @@ const Shell = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background: radial-gradient(circle at 10% 20%, rgba(16, 185, 129, 0.08), transparent 25%),
+    radial-gradient(circle at 90% 10%, rgba(52, 211, 153, 0.08), transparent 20%),
+    linear-gradient(180deg, #f0fdf4 0%, #ffffff 35%, #f0fdf4 100%);
 `;
 
 const Navbar = styled.nav`
@@ -26,6 +29,14 @@ const Navbar = styled.nav`
 
 const Content = styled.main`
   flex: 1;
+`;
+
+const PageContainer = styled.div`
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: ${({ theme }) => `${theme.spacing(2)} ${theme.spacing(2)}`};
+  display: grid;
+  gap: ${({ theme }) => theme.spacing(2)};
 `;
 
 const views = {
@@ -94,7 +105,9 @@ export const App: React.FC = () => {
           </Button>
         ))}
       </Navbar>
-      <Content>{renderView(current, handleLoginSuccess, () => setCurrent('login'))}</Content>
+      <Content>
+        <PageContainer>{renderView(current, handleLoginSuccess, () => setCurrent('login'))}</PageContainer>
+      </Content>
     </Shell>
   );
 };
